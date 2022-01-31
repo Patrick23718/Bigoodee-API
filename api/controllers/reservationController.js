@@ -318,8 +318,25 @@ exports.adminGetReservation = (req, res) => {
 exports.adminGetReservationStatus = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = parseInt(req.query.limit) || 10;
+  const ville = req.query.ville;
+  const prenom = req.query.nom;
 
-  Reservation.find({ $or: [{ status: "AWAIT" }, { status: "VALIDATE" }] })
+  Reservation.find({
+    // $and: [
+    //   { 'cliente.prenom': { $regex: ".*" + prenom + ".*", $options: "i" } },
+    //   {
+    //     $or: [{ status: "AWAIT" }, { nom: "VALIDATE" }],
+    //   },
+    //   { ville: { $regex: ".*" + ville + ".*", $options: "i" } },
+    // ],
+    $and: [
+      { status: "AWAIT" },
+      // { status: "VALIDATE" },
+      // { "cliente.prenom": { $regex: ".*" + prenom + ".*", $options: "i" } },
+    ],
+    // { prenom: { $regex: ".*" + prenom + ".*", $options: "i" } },
+    // { ville: { $regex: ".*" + ville + ".*", $options: "i" } },
+  })
     .skip((page - 1) * pageSize)
     .limit(pageSize)
     .populate([
@@ -336,6 +353,10 @@ exports.adminGetReservationStatus = (req, res) => {
       },
       {
         path: "cliente",
+        match: {
+          prenom: { $regex: ".*" + prenom + ".*", $options: "i" },
+          ville: { $regex: ".*" + ville + ".*", $options: "i" },
+        },
       },
       {
         path: "disponibilite",
@@ -440,7 +461,6 @@ exports.getAllClienteReserve = (req, res) => {
   Reservation.aggregate([
     { $group: { _id: { cliente: "$cliente", coiffeuse: "$coiffeuse" } } },
   ])
-    // .populate("cliente coiffeuse")
     .exec()
     .then((reserve) => {
       return res.status(200).json(reserve);

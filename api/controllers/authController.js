@@ -409,7 +409,20 @@ exports.getAllUser = (req, res) => {
 };
 
 exports.getAllCoiffeuse = (req, res) => {
-  User.find({ role: "coiffeuse" })
+  const ville = req.query.ville;
+  const nom = req.query.nom;
+  User.find({
+    $and: [
+      { role: "coiffeuse" },
+      {
+        $or: [
+          { prenom: { $regex: ".*" + nom + ".*", $options: "i" } },
+          { nom: { $regex: ".*" + nom + ".*", $options: "i" } },
+        ],
+      },
+      { ville: { $regex: ".*" + ville + ".*", $options: "i" } },
+    ],
+  })
     .sort({ prenom: 1 })
     .select(
       "nom prenom email biographie imageURL domicile deplace ville numero"
@@ -447,9 +460,21 @@ exports.getUserById = (req, res) => {
 
 exports.getAwaitCoiffeuse = (req, res) => {
   const status = req.query.status || "AWAIT";
-
+  const ville = req.query.ville;
+  const nom = req.query.nom;
+  console.log(ville + " " + nom);
   User.find({
-    $and: [{ role: "coiffeuse" }, { status: status }],
+    $and: [
+      { role: "coiffeuse" },
+      { status: status },
+      {
+        $or: [
+          { prenom: { $regex: ".*" + nom + ".*", $options: "i" } },
+          { nom: { $regex: ".*" + nom + ".*", $options: "i" } },
+        ],
+      },
+      { ville: { $regex: ".*" + ville + ".*", $options: "i" } },
+    ],
   })
     .select(
       "nom prenom email biographie imageURL domicile deplace ville numero createdAt"
